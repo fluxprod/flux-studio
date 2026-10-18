@@ -160,7 +160,16 @@
     <input type="text" id="accentHex" value="#dbff45">
   </div>
 
-  <div class="check"><input type="checkbox" id="rings" checked><span>кольца</span></div>
+  <label>Фон</label>
+  <select id="bgStyle">
+    <option value="rings" selected>кольца</option>
+    <option value="wave">волна</option>
+    <option value="grid">сетка</option>
+    <option value="diag">диагонали</option>
+    <option value="glow">свечение</option>
+    <option value="dots">точки</option>
+    <option value="none">чистый</option>
+  </select>
   <div class="check"><input type="checkbox" id="vignette" checked><span>виньетка</span></div>
   <div class="check"><input type="checkbox" id="grain" checked><span>зерно</span></div>
   <div class="check"><input type="checkbox" id="showSub" checked><span>подпись</span></div>
@@ -185,7 +194,7 @@ const el = (id) => document.getElementById(id);
 const cv = el('cv');
 const ctx = cv.getContext('2d');
 const FONT = 'Unbounded';
-const FIELDS = ['fmt','cw','ch','label','title','sub','chips','foot','uiTheme','bgHex','accentLine','showPhoto','dim','size','shift','align','accentHex','rings','vignette','grain','showSub','showChips','showMark'];
+const FIELDS = ['fmt','cw','ch','label','title','sub','chips','foot','uiTheme','bgHex','bgStyle','accentLine','showPhoto','dim','size','shift','align','accentHex','vignette','grain','showSub','showChips','showMark'];
 
 let photoImg = null;
 el('photo').addEventListener('change', (e) => {
@@ -241,13 +250,61 @@ function draw() {
     }
   }
 
-  if (el('rings').checked) {
+  const style = el('bgStyle').value;
+  const a = (v) => rgba(accent, light ? v * 1.9 : v);
+
+  if (style === 'rings') {
     for (let i = 0; i < 4; i++) {
       ctx.beginPath();
-      ctx.strokeStyle = rgba(accent, light ? 0.28 - i * 0.05 : 0.14 - i * 0.028);
+      ctx.strokeStyle = a(0.14 - i * 0.028);
       ctx.lineWidth = 2 * s;
       ctx.arc(wide ? W * 0.92 : W * 0.82, H * 0.1, (170 + i * 150) * s, 0, Math.PI * 2);
       ctx.stroke();
+    }
+  } else if (style === 'wave') {
+    for (let k = 0; k < 3; k++) {
+      ctx.beginPath();
+      ctx.strokeStyle = a(0.20 - k * 0.05);
+      ctx.lineWidth = (2.4 - k * 0.4) * s;
+      for (let x = 0; x <= W; x += 6) {
+        const t = x / W;
+        const y = H * (0.34 + k * 0.13) + Math.sin(t * 6.5 + k * 1.7) * H * (0.06 - k * 0.012);
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  } else if (style === 'grid') {
+    ctx.strokeStyle = a(0.10);
+    ctx.lineWidth = 1 * s;
+    const step = 90 * s;
+    for (let x = step; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y2 = step; y2 < H; y2 += step) { ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(W, y2); ctx.stroke(); }
+  } else if (style === 'diag') {
+    ctx.strokeStyle = a(0.12);
+    ctx.lineWidth = 2 * s;
+    const gap = 120 * s;
+    for (let i = -H; i < W + H; i += gap) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + H, H);
+      ctx.stroke();
+    }
+  } else if (style === 'glow') {
+    const cx = W * 0.78, cy = H * 0.22, r = Math.max(W, H) * 0.55;
+    const g2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g2.addColorStop(0, rgba(accent, light ? 0.22 : 0.30));
+    g2.addColorStop(1, rgba(accent, 0));
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, 0, W, H);
+  } else if (style === 'dots') {
+    ctx.fillStyle = a(0.22);
+    const step = 46 * s;
+    for (let x = step / 2; x < W; x += step) {
+      for (let y2 = step / 2; y2 < H; y2 += step) {
+        ctx.beginPath();
+        ctx.arc(x, y2, 2.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
