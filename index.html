@@ -32,7 +32,8 @@
   }
   aside { padding: 20px; border-right: 1px solid var(--ui-line); overflow-y: auto; max-height: 100vh; }
   main { padding: 22px; display: grid; place-items: center; }
-  h1 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  h1 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
   h2 { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ui-muted); margin: 22px 0 8px; }
   label { display: block; font-size: 10px; letter-spacing: .06em; color: var(--ui-muted); margin: 11px 0 5px; }
   input[type=text], textarea, select, input[type=number] {
@@ -57,7 +58,12 @@
   .ghost { background: transparent; color: var(--ui-fg); border: 1px solid var(--ui-line); font-weight: 500; }
   .quiet { background: transparent; color: var(--ui-muted); border: 0; font-weight: 400; min-height: 38px; margin-top: 4px; }
   .quiet:hover { color: var(--ui-fg); }
-  canvas { width: min(100%, 760px); height: auto; border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.7); display: block; }
+  canvas {
+    width: min(100%, 760px); height: auto; border-radius: 14px; display: block;
+    box-shadow: 0 30px 80px rgba(0,0,0,.65);
+    outline: 1px solid rgba(255,255,255,.16);
+    outline-offset: 9px;
+  }
   .hint { font-size: 10px; line-height: 1.55; color: var(--ui-muted); margin-top: 10px; }
   .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .chip { display: inline-flex; align-items: stretch; border: 1px solid var(--ui-line); border-radius: 99px; overflow: hidden; }
@@ -74,7 +80,10 @@
 </head>
 <body>
 <aside>
-  <h1>flux · конструктор</h1>
+  <div class="head">
+    <h1>flux · конструктор</h1>
+  </div>
+  <input type="hidden" id="uiTheme" value="dark">
 
   <label>Формат</label>
   <select id="fmt">
@@ -126,12 +135,6 @@
   <input type="text" id="foot" value="@никнейм">
 
   <h2>Настройки</h2>
-
-  <label>Тема сайта</label>
-  <select id="uiTheme">
-    <option value="dark" selected>тёмная</option>
-    <option value="light">светлая</option>
-  </select>
 
   <label>Фон карточки</label>
   <div class="row">
@@ -342,7 +345,7 @@ function draw() {
 }
 
 function sync() {
-  document.documentElement.setAttribute('data-theme', el('uiTheme').value);
+  document.documentElement.setAttribute('data-theme', 'dark');
   document.documentElement.style.setProperty('--accent', el('accentHex').value.trim() || '#dbff45');
   el('sizeV').textContent = el('size').value + '%';
   el('shiftV').textContent = el('shift').value + '%';
