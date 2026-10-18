@@ -106,6 +106,22 @@
   <label>Плашки (через запятую)</label>
   <input type="text" id="chips" value="первая плашка, вторая, третья">
 
+  <label>Акцентная строка</label>
+  <select id="accentLine">
+    <option value="0">без акцента</option>
+    <option value="1">1 — первая</option>
+    <option value="2">2 — вторая</option>
+    <option value="3" selected>3 — последняя</option>
+    <option value="4">4 — четвёртая</option>
+  </select>
+
+  <label>Фото на фон</label>
+  <input type="file" id="photo" accept="image/*" style="font-size:11px;padding:8px">
+  <div class="check"><input type="checkbox" id="showPhoto" checked><span>показывать фото</span></div>
+
+  <label>Затемнение фото <span class="val" id="dimV">55%</span></label>
+  <input type="range" id="dim" min="0" max="90" value="55">
+
   <label>Контакт</label>
   <input type="text" id="foot" value="@никнейм">
 
@@ -168,7 +184,17 @@ const el = (id) => document.getElementById(id);
 const cv = el('cv');
 const ctx = cv.getContext('2d');
 const FONT = 'Unbounded';
-const FIELDS = ['fmt','cw','ch','label','title','sub','chips','foot','uiTheme','bgHex','size','shift','align','accentHex','rings','vignette','grain','showSub','showChips','showMark'];
+const FIELDS = ['fmt','cw','ch','label','title','sub','chips','foot','uiTheme','bgHex','accentLine','showPhoto','dim','size','shift','align','accentHex','rings','vignette','grain','showSub','showChips','showMark'];
+
+let photoImg = null;
+el('photo').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const img = new Image();
+  img.onload = () => { photoImg = img; sync(); msg('фото добавлено'); };
+  img.onerror = () => msg('не удалось открыть файл');
+  img.src = URL.createObjectURL(f);
+});
 
 const PALETTES = ['#dbff45', '#ff7a45', '#7ad7ff', '#ff6b9d', '#c6ff6b', '#f2f2f2'];
 
@@ -200,6 +226,19 @@ function draw() {
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
+
+  if (photoImg && el('showPhoto').checked) {
+    const ir = photoImg.width / photoImg.height;
+    const cr = W / H;
+    let dw, dh;
+    if (ir > cr) { dh = H; dw = H * ir; } else { dw = W; dh = W / ir; }
+    ctx.drawImage(photoImg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    const dim = +el('dim').value / 100;
+    if (dim > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,' + dim + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
 
   if (el('rings').checked) {
     for (let i = 0; i < 4; i++) {
@@ -251,8 +290,10 @@ function draw() {
     fs *= 0.95;
     ctx.font = '800 ' + fs + 'px ' + FONT;
   }
+  const accentIdx = parseInt(el('accentLine').value, 10) - 1;
+  if (accentIdx < 0 || accentIdx > lines.length - 1) { /* без акцента */ }
   lines.forEach((ln, i) => {
-    ctx.fillStyle = i === lines.length - 1 && lines.length > 1 ? accent : fg;
+    ctx.fillStyle = i === accentIdx ? accent : fg;
     ctx.fillText(ln, cx, y);
     y += fs * 1.08;
   });
@@ -305,6 +346,7 @@ function sync() {
   document.documentElement.style.setProperty('--accent', el('accentHex').value.trim() || '#dbff45');
   el('sizeV').textContent = el('size').value + '%';
   el('shiftV').textContent = el('shift').value + '%';
+  el('dimV').textContent = el('dim').value + '%';
   el('customRow').style.display = el('fmt').value === 'custom' ? 'flex' : 'none';
   el('accent').value = el('accentHex').value.trim();
   el('bg').value = el('bgHex').value.trim();
