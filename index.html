@@ -10,36 +10,42 @@
   * { box-sizing: border-box; }
   body {
     margin: 0; background: #0b0b0b; color: #fcfcfc; font-family: 'Unbounded', system-ui, sans-serif;
-    display: grid; grid-template-columns: 330px minmax(0, 1fr); min-height: 100vh;
+    display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 100vh;
   }
-  aside { padding: 22px; border-right: 1px solid rgba(255,255,255,.07); overflow-y: auto; max-height: 100vh; }
+  aside { padding: 20px; border-right: 1px solid rgba(255,255,255,.07); overflow-y: auto; max-height: 100vh; }
   main { padding: 22px; display: grid; place-items: center; }
-  h1 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #dbff45; margin: 0 0 16px; }
-  label { display: block; font-size: 10px; letter-spacing: .06em; color: rgba(252,252,252,.45); margin: 12px 0 5px; }
-  input[type=text], textarea, select {
+  h1 { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: #dbff45; margin: 0 0 14px; }
+  h2 { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(252,252,252,.35); margin: 22px 0 8px; }
+  label { display: block; font-size: 10px; letter-spacing: .06em; color: rgba(252,252,252,.45); margin: 11px 0 5px; }
+  input[type=text], textarea, select, input[type=number] {
     width: 100%; background: #161616; border: 1px solid rgba(252,252,252,.13); border-radius: 9px;
     color: #fcfcfc; font-family: inherit; font-size: 12.5px; padding: 9px 11px; outline: none; resize: vertical;
   }
   textarea { line-height: 1.45; }
   select { cursor: pointer; }
-  input[type=text]:focus, textarea:focus, select:focus { border-color: #dbff45; }
+  input:focus, textarea:focus, select:focus { border-color: #dbff45; }
   input[type=range] { width: 100%; accent-color: #dbff45; }
+  input[type=color] { width: 100%; height: 38px; padding: 3px; background: #161616; border: 1px solid rgba(252,252,252,.13); border-radius: 9px; }
   .row { display: flex; gap: 8px; align-items: center; }
-  .row > * { flex: 1; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: rgba(252,252,252,.75); margin-top: 10px; }
+  .row > * { flex: 1; min-width: 0; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: rgba(252,252,252,.75); margin-top: 9px; }
   .check input { accent-color: #dbff45; width: 15px; height: 15px; }
   .val { font-size: 10px; color: rgba(252,252,252,.35); text-align: right; }
   button {
-    width: 100%; min-height: 46px; margin-top: 16px; border: 0; border-radius: 11px; cursor: pointer;
-    background: #dbff45; color: #0d0d0d; font-family: inherit; font-size: 12px; font-weight: 700;
+    width: 100%; min-height: 44px; margin-top: 10px; border: 0; border-radius: 11px; cursor: pointer;
+    font-family: inherit; font-size: 11.5px; font-weight: 700;
   }
+  .primary { background: #dbff45; color: #0d0d0d; }
+  .ghost { background: transparent; color: #fcfcfc; border: 1px solid rgba(252,252,252,.18); font-weight: 500; }
+  canvas { width: min(100%, 760px); height: auto; border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.7); display: block; }
+  .hint { font-size: 10px; line-height: 1.55; color: rgba(252,252,252,.35); margin-top: 10px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .presets button { width: auto; flex: 0 0 auto; min-height: 32px; padding: 0 12px; font-size: 10.5px; font-weight: 500; margin: 0; background: rgba(219,255,69,.1); border: 1px solid rgba(219,255,69,.35); color: #dbff45; }
   @media (max-width: 760px) {
     body { grid-template-columns: 1fr; }
     aside { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.08); max-height: none; }
     main { order: -1; padding: 14px 14px 4px; }
   }
-  canvas { width: min(100%, 760px); height: auto; border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.7); display: block; }
-  .hint { font-size: 10px; line-height: 1.55; color: rgba(252,252,252,.35); margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -54,7 +60,13 @@
     <option value="1080x1080">Квадрат · 1080×1080</option>
     <option value="1200x630">Превью · 1200×630</option>
     <option value="1920x1080">Широкий · 1920×1080</option>
+    <option value="custom">Свой размер</option>
   </select>
+
+  <div class="row" id="customRow" style="display:none;margin-top:8px">
+    <input type="number" id="cw" value="1080" min="200" max="5000" placeholder="ширина">
+    <input type="number" id="ch" value="1350" min="200" max="5000" placeholder="высота">
+  </div>
 
   <label>Метка сверху</label>
   <input type="text" id="label" value="flux">
@@ -67,13 +79,24 @@
   <textarea id="sub" rows="2">от архивкора до шансона
 полные права · до 5 правок</textarea>
 
+  <label>Плашки (через запятую)</label>
+  <input type="text" id="chips" value="до 5 правок, срок 3–7 дней, все файлы">
+
   <label>Контакт</label>
   <input type="text" id="foot" value="@flxprd">
+
+  <h2>Настройки</h2>
+
+  <label>Тема</label>
+  <select id="theme">
+    <option value="dark" selected>тёмная</option>
+    <option value="light">светлая</option>
+  </select>
 
   <label>Размер заголовка <span class="val" id="sizeV">100%</span></label>
   <input type="range" id="size" min="60" max="160" value="100">
 
-  <label>Сдвиг блока вверх/вниз <span class="val" id="shiftV">0%</span></label>
+  <label>Сдвиг блока <span class="val" id="shiftV">0%</span></label>
   <input type="range" id="shift" min="-25" max="25" value="0">
 
   <label>Выравнивание</label>
@@ -84,57 +107,65 @@
 
   <label>Акцент</label>
   <div class="row">
-    <input type="color" id="accent" value="#dbff45" style="height:38px;padding:3px">
+    <input type="color" id="accent" value="#dbff45">
     <input type="text" id="accentHex" value="#dbff45">
-  </div>
-
-  <label>Фон</label>
-  <div class="row">
-    <input type="color" id="bg" value="#0f0f0f" style="height:38px;padding:3px">
-    <input type="text" id="bgHex" value="#0f0f0f">
   </div>
 
   <div class="check"><input type="checkbox" id="rings" checked><span>кольца</span></div>
   <div class="check"><input type="checkbox" id="vignette" checked><span>виньетка</span></div>
   <div class="check"><input type="checkbox" id="grain" checked><span>зерно</span></div>
   <div class="check"><input type="checkbox" id="showSub" checked><span>подпись</span></div>
+  <div class="check"><input type="checkbox" id="showChips" checked><span>плашки</span></div>
   <div class="check"><input type="checkbox" id="showMark" checked><span>метка сверху</span></div>
 
-  <button id="dl">Скачать PNG</button>
-  <div class="hint">Скачивается в выбранном формате. Меняй что угодно — картинка справа обновляется сразу.</div>
+  <h2>Пресеты</h2>
+  <div class="row">
+    <input type="text" id="presetName" placeholder="название">
+    <button class="ghost" id="savePreset" style="flex:0 0 90px;margin:0">Сохранить</button>
+  </div>
+  <div class="presets" id="presetList"></div>
+
+  <button class="primary" id="dl">Скачать PNG</button>
+  <button class="ghost" id="share">Скопировать ссылку на дизайн</button>
+  <button class="ghost" id="random">Другой вариант</button>
+  <div class="hint" id="status"></div>
 </aside>
 
 <main><canvas id="cv"></canvas></main>
 
 <script>
-const LIME = '#dbff45';
-const FONT = 'Unbounded';
 const el = (id) => document.getElementById(id);
 const cv = el('cv');
 const ctx = cv.getContext('2d');
+const FONT = 'Unbounded';
+const FIELDS = ['fmt','cw','ch','label','title','sub','chips','foot','theme','size','shift','align','accentHex','rings','vignette','grain','showSub','showChips','showMark'];
 
-function hex2rgb(h) {
-  const m = h.replace('#', '');
-  return [parseInt(m.slice(0, 2), 16), parseInt(m.slice(2, 4), 16), parseInt(m.slice(4, 6), 16)];
-}
+const PALETTES = ['#dbff45', '#ff7a45', '#7ad7ff', '#ff6b9d', '#c6ff6b', '#f2f2f2'];
+
+function hex2rgb(h) { const m = h.replace('#',''); return [parseInt(m.slice(0,2),16), parseInt(m.slice(2,4),16), parseInt(m.slice(4,6),16)]; }
 function rgba(hex, a) { const c = hex2rgb(hex); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+function seedRand(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 
-function seedRand(seed) {
-  let s = seed >>> 0;
-  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+function size() {
+  return el('fmt').value === 'custom'
+    ? [Math.max(200, +el('cw').value || 1080), Math.max(200, +el('ch').value || 1350)]
+    : el('fmt').value.split('x').map(Number);
 }
 
 function draw() {
-  const [W, H] = el('fmt').value.split('x').map(Number);
+  const [W, H] = size();
   cv.width = W; cv.height = H;
 
-  const accent = el('accentHex').value.trim() || LIME;
-  const bg = el('bgHex').value.trim() || '#0f0f0f';
+  const light = el('theme').value === 'light';
+  const accent = el('accentHex').value.trim() || '#dbff45';
+  const bg = light ? '#f4f4f0' : '#0f0f0f';
+  const fg = light ? '#101010' : '#fcfcfc';
+  const subColor = light ? 'rgba(16,16,16,.62)' : 'rgba(252,252,252,.55)';
   const s = Math.min(W, H) / 720;
   const wide = W / H > 1.2;
   const center = el('align').value === 'center';
-  const sizeMul = Number(el('size').value) / 100;
-  const shift = (Number(el('shift').value) / 100) * H;
+  const sizeMul = +el('size').value / 100;
+  const shift = (+el('shift').value / 100) * H;
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
@@ -142,7 +173,7 @@ function draw() {
   if (el('rings').checked) {
     for (let i = 0; i < 4; i++) {
       ctx.beginPath();
-      ctx.strokeStyle = rgba(accent, 0.14 - i * 0.028);
+      ctx.strokeStyle = rgba(accent, light ? 0.28 - i * 0.05 : 0.14 - i * 0.028);
       ctx.lineWidth = 2 * s;
       ctx.arc(wide ? W * 0.92 : W * 0.82, H * 0.1, (170 + i * 150) * s, 0, Math.PI * 2);
       ctx.stroke();
@@ -152,7 +183,7 @@ function draw() {
   if (el('vignette').checked) {
     const g = ctx.createRadialGradient(W * 0.5, H * 0.3, H * 0.1, W * 0.5, H * 0.5, H * 1.25);
     g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(1, 'rgba(0,0,0,0.5)');
+    g.addColorStop(1, light ? 'rgba(0,0,0,0.10)' : 'rgba(0,0,0,0.5)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }
@@ -161,7 +192,7 @@ function draw() {
     const rnd = seedRand(7);
     const dots = Math.round((W * H) / 5200);
     for (let i = 0; i < dots; i++) {
-      ctx.fillStyle = 'rgba(255,255,255,' + (rnd() * 0.05 + 0.01) + ')';
+      ctx.fillStyle = light ? 'rgba(0,0,0,' + (rnd() * 0.04 + 0.01) + ')' : 'rgba(255,255,255,' + (rnd() * 0.05 + 0.01) + ')';
       ctx.fillRect(rnd() * W, rnd() * H, 1.2, 1.2);
     }
   }
@@ -176,36 +207,56 @@ function draw() {
   if (el('showMark').checked) {
     ctx.fillStyle = accent;
     ctx.font = '600 ' + (16 * s) + 'px ' + FONT;
-    const mark = (el('label').value || '').toUpperCase().split('').join('\u200a');
-    ctx.fillText(mark, cx, y - (wide ? 100 * s : 130 * s));
+    ctx.fillText((el('label').value || '').toUpperCase().split('').join('\u200a'), cx, y - (wide ? 100 * s : 130 * s));
   }
 
   const lines = (el('title').value || '').split('\n').filter((x) => x.trim().length);
   const base = (wide ? 92 : 86) * s;
-  let size = base * sizeMul;
+  let fs = base * sizeMul;
   const maxW = W - padX * 2;
-  ctx.font = '800 ' + size + 'px ' + FONT;
-  for (let guard = 0; guard < 40; guard++) {
-    const overflow = lines.some((ln) => ctx.measureText(ln).width > maxW);
-    if (!overflow || size < 24) break;
-    size *= 0.95;
-    ctx.font = '800 ' + size + 'px ' + FONT;
+  ctx.font = '800 ' + fs + 'px ' + FONT;
+  for (let g = 0; g < 40; g++) {
+    if (!lines.some((ln) => ctx.measureText(ln).width > maxW) || fs < 24) break;
+    fs *= 0.95;
+    ctx.font = '800 ' + fs + 'px ' + FONT;
   }
   lines.forEach((ln, i) => {
-    ctx.fillStyle = i === lines.length - 1 && lines.length > 1 ? accent : '#fcfcfc';
+    ctx.fillStyle = i === lines.length - 1 && lines.length > 1 ? accent : fg;
     ctx.fillText(ln, cx, y);
-    y += size * 1.08;
+    y += fs * 1.08;
   });
 
   if (el('showSub').checked) {
     ctx.font = '400 ' + (23 * s) + 'px ' + FONT;
-    ctx.fillStyle = 'rgba(252,252,252,.55)';
-    y += 20 * s;
+    ctx.fillStyle = subColor;
+    y += 18 * s;
     for (const ln of (el('sub').value || '').split('\n')) {
       if (!ln.trim()) continue;
       ctx.fillText(ln, cx, y);
       y += 36 * s;
     }
+  }
+
+  const chipList = (el('chips').value || '').split(',').map((x) => x.trim()).filter(Boolean);
+  if (el('showChips').checked && chipList.length) {
+    y += 16 * s;
+    ctx.font = '500 ' + (20 * s) + 'px ' + FONT;
+    let x = center ? 0 : padX;
+    const rowW = chipList.reduce((a, t) => a + ctx.measureText(t).width + 46 * s, 0) - 30 * s;
+    if (center) x = (W - rowW) / 2;
+    for (const t of chipList) {
+      const w = ctx.measureText(t).width + 40 * s;
+      const h = 52 * s;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, h / 2);
+      ctx.strokeStyle = rgba(accent, 0.55);
+      ctx.lineWidth = 1.6 * s;
+      ctx.stroke();
+      ctx.fillStyle = accent;
+      ctx.fillText(t, x + 20 * s, y + 15 * s);
+      x += w + 12 * s;
+    }
+    y += 52 * s;
   }
 
   const foot = el('foot').value.trim();
@@ -218,27 +269,127 @@ function draw() {
   ctx.textAlign = 'left';
 }
 
-function update() { draw(); el('sizeV').textContent = el('size').value + '%'; el('shiftV').textContent = el('shift').value + '%'; }
+function sync() {
+  el('sizeV').textContent = el('size').value + '%';
+  el('shiftV').textContent = el('shift').value + '%';
+  el('customRow').style.display = el('fmt').value === 'custom' ? 'flex' : 'none';
+  el('accent').value = el('accentHex').value.trim();
+  draw();
+}
 
-['label', 'title', 'sub', 'foot', 'fmt', 'size', 'shift', 'align', 'accentHex', 'bgHex'].forEach((id) => {
-  el(id).addEventListener('input', update);
-  el(id).addEventListener('change', update);
+function state() {
+  const o = {};
+  for (const f of FIELDS) {
+    const node = el(f);
+    o[f] = node.type === 'checkbox' ? node.checked : node.value;
+  }
+  return o;
+}
+
+function apply(o) {
+  for (const f of FIELDS) {
+    if (!(f in o)) continue;
+    const node = el(f);
+    if (node.type === 'checkbox') node.checked = !!o[f];
+    else node.value = o[f];
+  }
+  sync();
+}
+
+function msg(t) { el('status').textContent = t; }
+
+function encodeState() {
+  const json = JSON.stringify(state());
+  return btoa(unescape(encodeURIComponent(json))).replace(/=+$/, '');
+}
+function decodeState(h) {
+  try {
+    const json = decodeURIComponent(escape(atob(h)));
+    return JSON.parse(json);
+  } catch (e) { return null; }
+}
+
+const saved = decodeState((location.hash || '').replace('#d=', ''));
+if (saved) apply(saved);
+
+FIELDS.forEach((f) => {
+  const node = el(f);
+  node.addEventListener('input', sync);
+  node.addEventListener('change', sync);
 });
-['rings', 'vignette', 'grain', 'showSub', 'showMark'].forEach((id) => el(id).addEventListener('change', update));
-
-el('accent').addEventListener('input', () => { el('accentHex').value = el('accent').value; update(); });
-el('bg').addEventListener('input', () => { el('bgHex').value = el('bg').value; update(); });
+el('accent').addEventListener('input', () => { el('accentHex').value = el('accent').value; sync(); });
 
 el('dl').addEventListener('click', () => {
-  update();
+  draw();
+  const [W, H] = size();
   const a = document.createElement('a');
-  a.download = 'flux-' + el('fmt').value + '.png';
+  a.download = 'flux-' + W + 'x' + H + '.png';
   a.href = cv.toDataURL('image/png');
   a.click();
 });
 
-document.fonts.load('800 80px Unbounded').then(update).catch(update);
-update();
+el('share').addEventListener('click', async () => {
+  const link = location.origin + location.pathname + '#d=' + encodeState();
+  try {
+    await navigator.clipboard.writeText(link);
+    msg('ссылка скопирована — открой её на любом устройстве');
+  } catch (e) {
+    location.hash = 'd=' + encodeState();
+    msg('ссылка в адресной строке, скопируй её');
+  }
+});
+
+el('random').addEventListener('click', () => {
+  const palette = PALETTES[Math.floor(Math.random() * (PALETTES.length - 1))];
+  el('accentHex').value = palette;
+  el('size').value = 90 + Math.floor(Math.random() * 45);
+  el('shift').value = -10 + Math.floor(Math.random() * 20);
+  el('align').value = Math.random() < 0.25 ? 'center' : 'left';
+  el('rings').checked = Math.random() < 0.8;
+  el('vignette').checked = Math.random() < 0.8;
+  el('grain').checked = Math.random() < 0.7;
+  sync();
+  msg('новый вариант — если не нравится, жми ещё');
+});
+
+// --- пресеты ---
+function loadPresets() {
+  try { return JSON.parse(localStorage.getItem('fluxPresets') || '{}'); } catch (e) { return {}; }
+}
+function renderPresets() {
+  const p = loadPresets();
+  const box = el('presetList');
+  box.innerHTML = '';
+  Object.keys(p).forEach((name) => {
+    const b = document.createElement('button');
+    b.textContent = name;
+    b.addEventListener('click', () => { apply(p[name]); msg('пресет «' + name + '» загружен'); });
+    b.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const all = loadPresets();
+      delete all[name];
+      localStorage.setItem('fluxPresets', JSON.stringify(all));
+      renderPresets();
+      msg('пресет удалён');
+    });
+    box.appendChild(b);
+  });
+  if (!Object.keys(p).length) box.innerHTML = '<span style="font-size:10px;color:rgba(252,252,252,.3)">пока пусто</span>';
+}
+el('savePreset').addEventListener('click', () => {
+  const name = (el('presetName').value || '').trim();
+  if (!name) { msg('впиши название пресета'); return; }
+  const all = loadPresets();
+  all[name] = state();
+  localStorage.setItem('fluxPresets', JSON.stringify(all));
+  el('presetName').value = '';
+  renderPresets();
+  msg('пресет «' + name + '» сохранён');
+});
+
+renderPresets();
+document.fonts.load('800 80px Unbounded').then(sync).catch(sync);
+sync();
 </script>
 </body>
 </html>
