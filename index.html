@@ -32,6 +32,11 @@
     width: 100%; min-height: 46px; margin-top: 16px; border: 0; border-radius: 11px; cursor: pointer;
     background: #dbff45; color: #0d0d0d; font-family: inherit; font-size: 12px; font-weight: 700;
   }
+  @media (max-width: 760px) {
+    body { grid-template-columns: 1fr; }
+    aside { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.08); max-height: none; }
+    main { padding-top: 8px; }
+  }
   canvas { width: min(100%, 760px); height: auto; border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.7); display: block; }
   .hint { font-size: 10px; line-height: 1.55; color: rgba(252,252,252,.35); margin-top: 12px; }
 </style>
@@ -176,8 +181,15 @@ function draw() {
 
   const lines = (el('title').value || '').split('\n').filter((x) => x.trim().length);
   const base = (wide ? 92 : 86) * s;
-  const size = base * sizeMul;
+  let size = base * sizeMul;
+  const maxW = W - padX * 2;
   ctx.font = '800 ' + size + 'px ' + FONT;
+  for (let guard = 0; guard < 40; guard++) {
+    const overflow = lines.some((ln) => ctx.measureText(ln).width > maxW);
+    if (!overflow || size < 24) break;
+    size *= 0.95;
+    ctx.font = '800 ' + size + 'px ' + FONT;
+  }
   lines.forEach((ln, i) => {
     ctx.fillStyle = i === lines.length - 1 && lines.length > 1 ? accent : '#fcfcfc';
     ctx.fillText(ln, cx, y);
