@@ -314,24 +314,33 @@ function draw() {
 
   const chipList = (el('chips').value || '').split(',').map((x) => x.trim()).filter(Boolean);
   if (el('showChips').checked && chipList.length) {
-    y += 16 * s;
-    ctx.font = '500 ' + (20 * s) + 'px ' + FONT;
-    let x = center ? 0 : padX;
-    const rowW = chipList.reduce((a, t) => a + ctx.measureText(t).width + 46 * s, 0) - 30 * s;
-    if (center) x = (W - rowW) / 2;
-    for (const t of chipList) {
-      const w = ctx.measureText(t).width + 40 * s;
-      const h = 52 * s;
+    y += 18 * s;
+    const chipFont = '500 ' + (20 * s) + 'px ' + FONT;
+    ctx.font = chipFont;
+    const gap = 12 * s;
+    const padChip = 20 * s;
+    const heights = 52 * s;
+
+    // ширины считаем заранее — иначе центрирование съезжает
+    const widths = chipList.map((t) => ctx.measureText(t).width + padChip * 2);
+    const total = widths.reduce((a, b) => a + b, 0) + gap * (chipList.length - 1);
+
+    let x = center ? Math.max(padX, (W - total) / 2) : padX;
+    ctx.textAlign = 'left';   // иначе при центрировании текст уезжает из плашки
+
+    chipList.forEach((t, i) => {
+      const w = widths[i];
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, h / 2);
+      ctx.roundRect(x, y, w, heights, heights / 2);
       ctx.strokeStyle = rgba(accent, 0.55);
       ctx.lineWidth = 1.6 * s;
       ctx.stroke();
       ctx.fillStyle = accent;
-      ctx.fillText(t, x + 20 * s, y + 15 * s);
-      x += w + 12 * s;
-    }
-    y += 52 * s;
+      ctx.font = chipFont;
+      ctx.fillText(t, x + padChip, y + 15 * s);
+      x += w + gap;
+    });
+    y += heights;
   }
 
   const foot = el('foot').value.trim();
