@@ -112,8 +112,10 @@
   <textarea id="sub" rows="2">подпись мелким текстом
 вторая строка для примера</textarea>
 
-  <label>Плашки (через запятую)</label>
-  <input type="text" id="chips" value="первая плашка, вторая, третья">
+  <label>Плашки — по одной в строке</label>
+  <textarea id="chips" rows="3">первая плашка
+вторая
+третья</textarea>
 
   <label>Акцентная строка</label>
   <select id="accentLine">
@@ -368,7 +370,10 @@ function draw() {
     }
   }
 
-  const chipList = (el('chips').value || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const chipList = (el('chips').value || '')
+    .split(/[\n,]/)
+    .map((x) => x.trim())
+    .filter(Boolean);
   if (el('showChips').checked && chipList.length) {
     y += 18 * s;
     const chipFont = '500 ' + (20 * s) + 'px ' + FONT;
