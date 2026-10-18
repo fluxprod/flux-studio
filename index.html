@@ -118,10 +118,10 @@
   <label>Акцентная строка</label>
   <select id="accentLine">
     <option value="0">без акцента</option>
-    <option value="1">1 — первая</option>
-    <option value="2">2 — вторая</option>
-    <option value="3" selected>3 — последняя</option>
-    <option value="4">4 — четвёртая</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3" selected>3</option>
+    <option value="4">4</option>
   </select>
 
   <label>Фото на фон</label>
@@ -175,8 +175,6 @@
   <div class="presets" id="presetList"></div>
 
   <button class="primary" id="dl">Скачать PNG</button>
-  <button class="quiet" id="random">Другой вариант</button>
-  <button class="quiet" id="share">Скопировать ссылку на дизайн</button>
   <div class="hint" id="status"></div>
 </aside>
 
@@ -293,7 +291,8 @@ function draw() {
     fs *= 0.95;
     ctx.font = '800 ' + fs + 'px ' + FONT;
   }
-  const accentIdx = parseInt(el('accentLine').value, 10) - 1;
+  let accentIdx = parseInt(el('accentLine').value, 10) - 1;
+  if (accentIdx >= lines.length) accentIdx = lines.length - 1;
   if (accentIdx < 0 || accentIdx > lines.length - 1) { /* без акцента */ }
   lines.forEach((ln, i) => {
     ctx.fillStyle = i === accentIdx ? accent : fg;
@@ -415,31 +414,6 @@ el('dl').addEventListener('click', () => {
   a.download = 'flux-' + W + 'x' + H + '.png';
   a.href = cv.toDataURL('image/png');
   a.click();
-});
-
-el('share').addEventListener('click', async () => {
-  const link = location.origin + location.pathname + '#d=' + encodeState();
-  try {
-    await navigator.clipboard.writeText(link);
-    msg('ссылка скопирована — открой её на любом устройстве');
-  } catch (e) {
-    location.hash = 'd=' + encodeState();
-    msg('ссылка в адресной строке, скопируй её');
-  }
-});
-
-el('random').addEventListener('click', () => {
-  const palette = PALETTES[Math.floor(Math.random() * (PALETTES.length - 1))];
-  el('accentHex').value = palette;
-  if (Math.random() < 0.25) el('bgHex').value = '#f4f4f0'; else if (Math.random() < 0.5) el('bgHex').value = '#0f0f0f';
-  el('size').value = 90 + Math.floor(Math.random() * 45);
-  el('shift').value = -10 + Math.floor(Math.random() * 20);
-  el('align').value = Math.random() < 0.25 ? 'center' : 'left';
-  el('rings').checked = Math.random() < 0.8;
-  el('vignette').checked = Math.random() < 0.8;
-  el('grain').checked = Math.random() < 0.7;
-  sync();
-  msg('новый вариант — если не нравится, жми ещё');
 });
 
 // --- пресеты ---
