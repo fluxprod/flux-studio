@@ -64,6 +64,11 @@
     outline: 1px solid rgba(255,255,255,.16);
     outline-offset: 9px;
   }
+  .saver { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: none; place-items: center; z-index: 50; padding: 20px; }
+  .saver.open { display: grid; }
+  .saver img { max-width: 100%; max-height: 78vh; border-radius: 12px; }
+  .saver p { font-size: 12px; line-height: 1.6; color: #fcfcfc; text-align: center; margin: 16px 0 0; }
+  .saver button { width: auto; padding: 0 24px; margin-top: 14px; background: var(--accent); color: #0d0d0d; border: 0; }
   .hint { font-size: 10px; line-height: 1.55; color: var(--ui-muted); margin-top: 10px; }
   .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .chip { display: inline-flex; align-items: stretch; border: 1px solid var(--ui-line); border-radius: 99px; overflow: hidden; }
@@ -190,6 +195,14 @@
 </aside>
 
 <main><canvas id="cv"></canvas></main>
+
+<div class="saver" id="saver">
+  <div style="display:grid;justify-items:center">
+    <img id="saverImg" alt="картинка">
+    <p>Зажми картинку и выбери «Сохранить в Фото»<br>или «Скачать изображение»</p>
+    <button id="saverClose">Готово</button>
+  </div>
+</div>
 
 <script>
 const el = (id) => document.getElementById(id);
@@ -469,13 +482,50 @@ FIELDS.forEach((f) => {
 el('accent').addEventListener('input', () => { el('accentHex').value = el('accent').value; sync(); });
 el('bg').addEventListener('input', () => { el('bgHex').value = el('bg').value; sync(); });
 
-el('dl').addEventListener('click', () => {
+async function exportImage() {
   draw();
   const [W, H] = size();
-  const a = document.createElement('a');
-  a.download = 'flux-' + W + 'x' + H + '.png';
-  a.href = cv.toDataURL('image/png');
-  a.click();
+  const name = 'flux-' + W + 'x' + H + '.png';
+  const isMobile = /Android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+  const dataUrl = cv.toDataURL('image/png');
+
+  // на телефоне пробуем системное «поделиться» — оттуда сохраняют в Фото
+  if (isMobile && navigator.canShare && navigator.share) {
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], name, { type: 'image/png' });
+      if (navigator.canShare({ files: [file] })) {
+        const shared = await Promise.race([
+          navigator.share({ files: [file], title: name }).then(() => 'ok').catch(() => 'no'),
+          new Promise((r) => setTimeout(() => r('timeout'), 2500)),
+        ]);
+        if (shared !== 'no') { msg('выбери «Сохранить изображение»'); return; }
+      }
+    } catch (e) { /* идём дальше */ }
+  }
+
+  // обычное скачивание — работает на компьютере и Android
+  const link = document.createElement('a');
+  if (!isMobile || !/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    link.href = dataUrl;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    msg('картинка скачивается');
+    if (!isMobile) return;
+  }
+
+  // iOS: показываем картинку, её сохраняют долгим нажатием
+  el('saverImg').src = dataUrl;
+  el('saver').classList.add('open');
+  msg('зажми картинку и выбери «Сохранить в Фото»');
+}
+
+el('dl').addEventListener('click', exportImage);
+el('saverClose').addEventListener('click', () => {
+  el('saver').classList.remove('open');
+  el('saverImg').src = '';
 });
 
 // --- пресеты ---
